@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --primary: #00ff66; /* Neon Green */
+  --primary-glow: rgba(0, 255, 102, 0.4);
+  --secondary: #00e5ff; /* Cyan */
+  --secondary-glow: rgba(0, 229, 255, 0.4);
+  --danger: #ff003c; /* Neon Red */
+  --warning: #ffaa00; /* Neon Orange */
+  --bg-dark: #050505;
+  --bg-darker: #000000;
+  --card-bg: rgba(10, 10, 10, 0.85);
+  --glass-border: rgba(0, 255, 102, 0.15);
+  --text-main: #ffffff;
+  --text-muted: #888888;
+  
+  font-family: 'Outfit', 'Inter', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: var(--text-main);
+  background-color: var(--bg-darker);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #000000;
+  background-image: 
+    linear-gradient(rgba(0, 255, 102, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 102, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Glassmorphism Classes */
+.glass-pane {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.3s ease;
+}
+
+.glass-pane:hover {
+  border-color: rgba(0, 255, 102, 0.3);
+}
+
+.profit-text { color: var(--primary); font-weight: 600; }
+.loss-text { color: var(--danger); font-weight: 600; }
+.risk-text { color: var(--warning); font-weight: 600; }
+
+/* Dashboard Progress */
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--secondary), var(--primary));
+  box-shadow: 0 0 15px var(--primary-glow);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animation Utilities */
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px var(--primary-glow); }
+  50% { box-shadow: 0 0 20px var(--primary-glow); }
+  100% { box-shadow: 0 0 5px var(--primary-glow); }
+}
+
+.glow-active {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4 {
+  letter-spacing: -0.025em;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, #888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), #009933);
+  color: black;
+  border: none;
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px 0 var(--primary-glow);
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.875rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  #root {
+    padding: 1rem;
+  }
+  
+  .glass-pane {
+    padding: 1.25rem;
+  }
+}
+
+/* Theme Fallback Utility Classes */
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.bg-primary { background-color: var(--primary); }
+.bg-secondary { background-color: var(--secondary); }
+.bg-danger { background-color: var(--danger); }
+.bg-warning { background-color: var(--warning); }
+.border-primary { border-color: var(--primary); }
+.border-secondary { border-color: var(--secondary); }
+.border-danger { border-color: var(--danger); }
+.border-warning { border-color: var(--warning); }
