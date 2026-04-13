@@ -1,6 +1,7 @@
 import React from 'react';
+import AnimatedCounter from './AnimatedCounter';
 
-const StatCard = ({ title, value, icon, trend, progress }) => {
+const StatCard = ({ title, value, numericValue, format, icon, trend, progress }) => {
   return (
     <div className="glass-pane p-5 flex flex-col justify-between relative overflow-hidden group">
       <div className="flex justify-between items-start mb-4">
@@ -15,7 +16,13 @@ const StatCard = ({ title, value, icon, trend, progress }) => {
       </div>
       <div>
         <h3 className="text-slate-400 text-sm uppercase tracking-wider font-semibold mb-1">{title}</h3>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-2xl font-bold">
+          {typeof numericValue === 'number' ? (
+            <AnimatedCounter value={numericValue} format={format} />
+          ) : (
+            value
+          )}
+        </p>
       </div>
       
       {progress !== undefined && (

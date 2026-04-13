@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { getPayoffMatrix } from '../logic/GameEngine';
 import { Network, Crown, AlertOctagon } from 'lucide-react';
 
 const PayoffMatrix = ({ currentSuppliers }) => {
   const matrix = getPayoffMatrix(currentSuppliers);
+  const [hovered, setHovered] = useState(null);
 
   // Find dominant strategy based on pure EV
   let maxEv = -Infinity;
@@ -34,8 +36,14 @@ const PayoffMatrix = ({ currentSuppliers }) => {
           <tbody>
             {matrix.map((row, idx) => {
               const isDominant = row.strategy === dominantStrategy;
+              const isHovered = hovered === row.strategy;
               return (
-                <tr key={idx} className={`border-b border-slate-800/50 transition-colors ${isDominant ? 'bg-primary/5' : 'hover:bg-white/5'}`}>
+                <tr
+                  key={idx}
+                  onMouseEnter={() => setHovered(row.strategy)}
+                  onMouseLeave={() => setHovered(null)}
+                  className={`border-b border-slate-800/50 transition-colors ${isDominant ? 'bg-primary/5' : 'hover:bg-white/5'} ${isHovered ? 'bg-white/5' : ''}`}
+                >
                   <td className="p-3">
                     <div className="flex items-center gap-2 font-bold text-slate-300">
                       {isDominant && <Crown size={14} className="text-warning" />}
@@ -43,14 +51,24 @@ const PayoffMatrix = ({ currentSuppliers }) => {
                     </div>
                   </td>
                   <td className="p-3 text-center">
-                    <span className={`font-mono font-bold ${isDominant ? 'text-primary' : 'text-slate-400'}`}>
+                    <motion.span
+                      layout
+                      className={`font-mono font-bold ${isDominant ? 'text-primary' : 'text-slate-400'}`}
+                      animate={isHovered ? { y: -1, scale: 1.03 } : { y: 0, scale: 1 }}
+                      transition={{ duration: 0.25 }}
+                    >
                       ₹{row.ev}
-                    </span>
+                    </motion.span>
                   </td>
                   <td className="p-3 text-center">
-                    <span className="font-mono text-danger opacity-80 flex items-center justify-center gap-1">
+                    <motion.span
+                      layout
+                      className="font-mono text-danger opacity-80 flex items-center justify-center gap-1"
+                      animate={isHovered ? { y: -1, scale: 1.03 } : { y: 0, scale: 1 }}
+                      transition={{ duration: 0.25 }}
+                    >
                       <AlertOctagon size={12} /> ₹{row.minimax}
-                    </span>
+                    </motion.span>
                   </td>
                 </tr>
               )

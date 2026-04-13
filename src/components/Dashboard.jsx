@@ -13,7 +13,7 @@ const Dashboard = ({ history, isGameOver, totalProfit, currentSuppliers }) => {
   if (history.length === 0) {
     return (
       <div className="glass-pane p-8 h-full flex flex-col items-center justify-center text-center">
-        <div className="p-4 bg-slate-800 rounded-full mb-4 animate-bounce">
+        <div className="p-4 bg-slate-800 rounded-full mb-4">
           <BarChart2 size={48} className="text-slate-500" />
         </div>
         <h3 className="text-xl font-bold mb-2">Awaiting Data</h3>

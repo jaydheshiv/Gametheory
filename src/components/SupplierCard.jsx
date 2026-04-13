@@ -4,14 +4,20 @@ import { Package, ShieldCheck, DollarSign, Award, ArrowUpRight, AlertCircle } fr
 
 const SupplierCard = ({ supplier, type }) => {
   const isPremium = type === 'A';
+  const reliabilityPct = Math.round(supplier.reliability * 100);
+  const reputationPct = Math.round(supplier.reputation * 100);
+  const risky = supplier.reliability < 0.55;
   
   return (
     <motion.div 
-      whileHover={{ y: -5, borderColor: isPremium ? 'rgba(99, 102, 241, 0.4)' : 'rgba(245, 158, 11, 0.4)' }}
+      whileHover={{ y: -6, scale: 1.01, borderColor: isPremium ? 'rgba(99, 102, 241, 0.45)' : 'rgba(245, 158, 11, 0.45)' }}
       className={`glass-pane p-8 relative overflow-hidden group border-2 ${isPremium ? 'border-indigo-500/10' : 'border-amber-500/10'}`}
     >
       {/* Background Accent Decorative */}
       <div className={`absolute -right-8 -top-8 w-24 h-24 blur-3xl rounded-full opacity-10 transition-opacity group-hover:opacity-30 ${isPremium ? 'bg-indigo-500' : 'bg-amber-500'}`} />
+      {risky && (
+        <div className="absolute -left-12 -bottom-10 h-44 w-44 rounded-full blur-3xl bg-rose-500/20 risk-pulse" />
+      )}
 
       <div className="flex justify-between items-start mb-8 relative z-10">
         <div>
@@ -43,8 +49,16 @@ const SupplierCard = ({ supplier, type }) => {
             <ShieldCheck size={12} /> Reliability
           </div>
           <p className={`text-2xl font-black ${supplier.reliability > 0.8 ? 'text-emerald-400' : supplier.reliability > 0.6 ? 'text-amber-400' : 'text-rose-400'}`}>
-            {(supplier.reliability * 100).toFixed(0)}%
+            {reliabilityPct}%
           </p>
+          <div className="mt-3 h-1.5 w-full bg-black/50 rounded-full overflow-hidden border border-slate-800/60">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${reliabilityPct}%` }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
+              className={`${supplier.reliability > 0.8 ? 'bg-emerald-500' : supplier.reliability > 0.6 ? 'bg-amber-500' : 'bg-rose-500'} h-full`}
+            />
+          </div>
         </div>
       </div>
 
@@ -53,20 +67,23 @@ const SupplierCard = ({ supplier, type }) => {
           <span className="flex items-center gap-1">
             <AlertCircle size={10} /> Market Reputation Index
           </span>
-          <span className="text-slate-300">{Math.round(supplier.reputation * 100)}%</span>
+          <span className="text-slate-300">{reputationPct}%</span>
         </div>
         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
           <motion.div 
             initial={{ width: 0 }}
-            animate={{ width: `${supplier.reputation * 100}%` }}
+            animate={{ width: `${reputationPct}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
             className={`h-full ${isPremium ? 'bg-gradient-to-r from-indigo-600 to-indigo-400' : 'bg-gradient-to-r from-amber-600 to-amber-400'}`} 
           />
         </div>
         {supplier.reliability < 0.5 && (
-          <p className="text-[10px] text-rose-500 font-bold mt-2 animate-pulse">
-            ⚠️ SUPPLIER INSTABILITY DETECTED
-          </p>
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-2">
+            <AlertCircle size={14} className="text-rose-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-rose-300">
+              Supplier instability detected
+            </span>
+          </div>
         )}
       </div>
     </motion.div>
