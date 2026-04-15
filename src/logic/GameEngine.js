@@ -24,6 +24,8 @@ export const INITIAL_SUPPLIERS = {
 
 export const REVENUE_PER_ROUND = 250;
 
+export const STRATEGIES = ["A", "B", "DIVERSIFY", "CHEAPEST"];
+
 export const RANDOM_EVENTS = [
   {
     id: 'pandemic',
@@ -61,14 +63,53 @@ export const RANDOM_EVENTS = [
   }
 ];
 
+const createSeededRng = (seed = 1) => {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+const strategySupplierUsage = (strategy, suppliers) => {
+  if (strategy === "A") return { A: 1, B: 0 };
+  if (strategy === "B") return { A: 0, B: 1 };
+  if (strategy === "DIVERSIFY") return { A: 0.5, B: 0.5 };
+
+  const cheaper = suppliers.A.cost <= suppliers.B.cost ? "A" : "B";
+  return cheaper === "A" ? { A: 1, B: 0 } : { A: 0, B: 1 };
+};
+
+const expandFiveRoundPlans = (depth, acc = [], out = []) => {
+  if (depth === 0) {
+    out.push(acc.slice());
+    return out;
+  }
+
+  STRATEGIES.forEach((s) => {
+    acc.push(s);
+    expandFiveRoundPlans(depth - 1, acc, out);
+    acc.pop();
+  });
+
+  return out;
+};
+
 export const calculateRoundOutcome = (strategy, currentSuppliers, round) => {
+  return calculateRoundOutcomeWithRng(strategy, currentSuppliers, round);
+};
+
+export const calculateRoundOutcomeWithRng = (strategy, currentSuppliers, round, rng) => {
+  const random = typeof rng === 'function' ? rng : Math.random;
   let selectedSuppliers = [];
   let event = null;
   let revenue = REVENUE_PER_ROUND;
 
   // 1. Event Logic (Requested frequency ~once in two rounds)
-  if (round % 2 === 0 || Math.random() < 0.2) {
-    const roll = Math.random();
+  if (round % 2 === 0 || random() < 0.2) {
+    const roll = random();
     let accumulated = 0;
     for (const e of RANDOM_EVENTS) {
       accumulated += e.chance;
@@ -107,7 +148,7 @@ export const calculateRoundOutcome = (strategy, currentSuppliers, round) => {
       }
     }
 
-    const failed = Math.random() > rel;
+    const failed = random() > rel;
     const loss = failed ? (s.weight * 120) : 0; // Slightly higher penalty for fails
 
     return {
@@ -219,5 +260,106 @@ export const getPayoffMatrix = (currentSuppliers) => {
   });
 
   return matrix;
+};
+
+export const simulateFiveRoundPlan = (plan, seed = 1) => {
+  const rng = createSeededRng(seed);
+  let suppliers = JSON.parse(JSON.stringify(INITIAL_SUPPLIERS));
+  let health = 100;
+  let totalProfit = 0;
+  const history = [];
+
+  for (let i = 0; i < 5; i += 1) {
+    const strategy = plan[i];
+    const result = calculateRoundOutcomeWithRng(strategy, suppliers, i + 1, rng);
+    history.push(result);
+    totalProfit += result.profit;
+    health = Math.min(100, Math.max(0, health + result.healthImpact));
+    suppliers = updateSupplierAI(suppliers, history);
+
+    if (health <= 0) break;
+  }
+
+  return {
+    plan,
+    totalProfit: Math.round(totalProfit),
+    finalHealth: health,
+    survivedAllRounds: history.length === 5 && health > 0,
+    roundsPlayed: history.length,
+    history,
+  };
+};
+
+export const sweepAllFiveRoundPlans = (seeds = [11, 17, 23, 29, 31]) => {
+  const plans = expandFiveRoundPlans(5);
+
+  return plans
+    .map((plan) => {
+      const runs = seeds.map((seed) => simulateFiveRoundPlan(plan, seed));
+      const avgProfit = runs.reduce((acc, run) => acc + run.totalProfit, 0) / runs.length;
+      const avgHealth = runs.reduce((acc, run) => acc + run.finalHealth, 0) / runs.length;
+      const survivalRate = runs.filter((run) => run.survivedAllRounds).length / runs.length;
+
+      return {
+        plan: plan.join(" -> "),
+        avgProfit: Math.round(avgProfit),
+        avgHealth: Math.round(avgHealth),
+        survivalRate: Math.round(survivalRate * 100),
+        sampleRuns: runs,
+      };
+    })
+    .sort((a, b) => b.avgProfit - a.avgProfit);
+};
+
+export const buildNashAnalysis = (currentSuppliers) => {
+  const strategies = STRATEGIES;
+  const payoff = {};
+
+  const congestionA = (1 - currentSuppliers.A.reliability) * 40 + currentSuppliers.A.cost * 0.06;
+  const congestionB = (1 - currentSuppliers.B.reliability) * 40 + currentSuppliers.B.cost * 0.06;
+
+  strategies.forEach((s1) => {
+    payoff[s1] = {};
+
+    strategies.forEach((s2) => {
+      const ev1 = analyzeStrategy(s1, currentSuppliers).expectedProfit;
+      const ev2 = analyzeStrategy(s2, currentSuppliers).expectedProfit;
+
+      const u1 = strategySupplierUsage(s1, currentSuppliers);
+      const u2 = strategySupplierUsage(s2, currentSuppliers);
+
+      const overlapPenalty1 = (u1.A * u2.A * congestionA) + (u1.B * u2.B * congestionB);
+      const overlapPenalty2 = (u2.A * u1.A * congestionA) + (u2.B * u1.B * congestionB);
+
+      payoff[s1][s2] = {
+        p1: Math.round(ev1 - overlapPenalty1),
+        p2: Math.round(ev2 - overlapPenalty2),
+      };
+    });
+  });
+
+  const equilibria = [];
+
+  strategies.forEach((s1) => {
+    strategies.forEach((s2) => {
+      const current = payoff[s1][s2];
+      const p1BestResponse = Math.max(...strategies.map((candidate) => payoff[candidate][s2].p1));
+      const p2BestResponse = Math.max(...strategies.map((candidate) => payoff[s1][candidate].p2));
+
+      if (current.p1 === p1BestResponse && current.p2 === p2BestResponse) {
+        equilibria.push({
+          player: s1,
+          opponent: s2,
+          payoff: current,
+        });
+      }
+    });
+  });
+
+  return {
+    strategies,
+    payoff,
+    equilibria,
+  };
 };
 

@@ -7,6 +7,7 @@ import StatCard from './components/StatCard';
 import ResultModal from './components/ResultModal';
 import Dashboard from './components/Dashboard';
 import TutorialPanel from './components/TutorialPanel';
+import StrategyLab from './components/StrategyLab';
 import { Activity, Shield, TrendingUp, Wallet, Package, RotateCcw, HelpCircle, ChevronRight } from 'lucide-react';
 import { useLenisSmoothScroll } from './animations/useLenis';
 import CursorFollower from './animations/CursorFollower';
@@ -308,6 +309,10 @@ function App() {
               currentSuppliers={gameState.suppliers}
             />
           </div>
+        </GsapReveal>
+
+        <GsapReveal className="lg:col-span-12" start="top 85%">
+          <StrategyLab currentSuppliers={gameState.suppliers} />
         </GsapReveal>
       </main>
 

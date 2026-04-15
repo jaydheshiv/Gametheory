@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { getPayoffMatrix } from '../logic/GameEngine';
+import { getPayoffMatrix, buildNashAnalysis } from '../logic/GameEngine';
 import { Network, Crown, AlertOctagon } from 'lucide-react';
 
 const PayoffMatrix = ({ currentSuppliers }) => {
   const matrix = getPayoffMatrix(currentSuppliers);
+  const nash = buildNashAnalysis(currentSuppliers);
   const [hovered, setHovered] = useState(null);
 
-  // Find dominant strategy based on pure EV
+  // Keep EV-best highlight for quick reading of the matrix table.
   let maxEv = -Infinity;
   let dominantStrategy = null;
   matrix.forEach(m => {
@@ -79,7 +80,10 @@ const PayoffMatrix = ({ currentSuppliers }) => {
 
       <div className="mt-4 p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
         <p className="text-xs text-secondary/80 leading-relaxed font-mono">
-          <span className="font-bold text-secondary">NASH EQUILIBRIUM:</span> Based on stochastic supplier reliability, <strong className="text-white">{dominantStrategy}</strong> represents the dominant baseline strategy maximizing utility.
+          <span className="font-bold text-secondary">NASH EQUILIBRIUM:</span>{' '}
+          {nash.equilibria.length > 0
+            ? nash.equilibria.map((eq) => `${eq.player} vs ${eq.opponent} (${eq.payoff.p1}, ${eq.payoff.p2})`).join(' | ')
+            : 'No pure-strategy equilibrium found for current supplier state.'}
         </p>
       </div>
     </div>
